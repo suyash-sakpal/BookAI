@@ -1,0 +1,7 @@
+PyMuPDF
+spacy
+torch
+transformers
+lexrank
+SpeechRecognition
+Flask

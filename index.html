@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BookAI — Futuristic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+    <header class="header">
+      <div class="brand">BookAI</div>
+      <div class="tag">Summarize. Understand. Ask.</div>
+    </header>
+
+    <main class="container">
+      <section class="panel upload">
+        <h2>Upload Document</h2>
+        <p class="muted">PDF or TXT. We process locally on the server.</p>
+        <form id="uploadForm">
+          <input type="file" id="file" name="file" accept=".pdf,.txt" />
+          <button type="submit" class="btn primary">Upload</button>
+        </form>
+        <div id="uploadStatus" class="status"></div>
+      </section>
+
+      <section class="panel actions">
+        <h2>Summarize</h2>
+        <div class="btn-row">
+          <button class="btn" data-method="spacy">spaCy Extractive</button>
+          <button class="btn" data-method="bart">BART Abstractive</button>
+          <button class="btn" data-method="lexrank">LexRank Extractive</button>
+        </div>
+      </section>
+
+      <section class="panel qa">
+        <h2>Ask a Question</h2>
+        <div class="qa-row">
+          <input type="text" id="question" placeholder="What would you like to know?" />
+          <button id="askBtn" class="btn primary">Ask</button>
+        </div>
+      </section>
+
+      <section class="panel results">
+        <h2>Results</h2>
+        <div id="results" class="results-box"></div>
+      </section>
+    </main>
+
+    <footer class="footer">Built with Transformers, spaCy, and love.</footer>
+
+    <script>
+      const results = document.getElementById('results');
+      const statusBox = document.getElementById('uploadStatus');
+
+      function appendResult(title, content) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<div class="card-title">${title}</div><div class="card-body">${content}</div>`;
+        results.prepend(card);
+      }
+
+      document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = document.getElementById('file').files[0];
+        if (!file) {
+          statusBox.textContent = 'Please choose a file.';
+          return;
+        }
+        const formData = new FormData();
+        formData.append('file', file);
+        statusBox.textContent = 'Uploading…';
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        statusBox.textContent = data.ok ? `${data.message} (${data.length} chars)` : `Error: ${data.error}`;
+      });
+
+      document.querySelectorAll('[data-method]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const method = btn.getAttribute('data-method');
+          btn.disabled = true;
+          btn.textContent = 'Working…';
+          try {
+            const res = await fetch('/api/summarize', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ method })
+            });
+            const data = await res.json();
+            if (data.ok) {
+              appendResult(`${data.type}`, data.summary.replace(/</g, '&lt;'));
+            } else {
+              appendResult('Error', data.error || 'Unknown error');
+            }
+          } catch (err) {
+            appendResult('Error', String(err));
+          } finally {
+            btn.disabled = false;
+            btn.textContent = btn.getAttribute('data-method').toUpperCase();
+          }
+        });
+      });
+
+      document.getElementById('askBtn').addEventListener('click', async () => {
+        const q = document.getElementById('question').value.trim();
+        if (!q) return;
+        const btn = document.getElementById('askBtn');
+        btn.disabled = true;
+        btn.textContent = 'Thinking…';
+        try {
+          const res = await fetch('/api/qa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: q })
+          });
+          const data = await res.json();
+          if (data.ok) {
+            appendResult('Answer', data.answer.replace(/</g, '&lt;'));
+          } else {
+            appendResult('Error', data.error || 'Unknown error');
+          }
+        } catch (err) {
+          appendResult('Error', String(err));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Ask';
+        }
+      });
+    </script>
+  </body>
+  </html>
+
+
