@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Distribution / Packaging
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+.tox/
+.coverage
+.coverage.*
+.cache
+htmlcov/
+nosetests.xml
+coverage.xml
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Flask
+instance/
+upload.pdf
+
+# Hugging Face model cache
+*.bin
+*.safetensors
+
+# Logs
+*.log
